@@ -1,28 +1,30 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
 pragma solidity ^0.8.0;
 
+import "./ownable.sol";
+
 // ゾンビの外見は「ゾンビDNA」によって決まる。
 // ゾンビDNAは16桁の整数である
-// 頭部、目、シャツ、肌、目の色、服の色
+// 頭部、目、シャツ、肌、目の色、服の色、　　　　、猫ゾンビ
 
-contract ZombieFactory {
-
-    // コンストラクターを定義
+contract ZombieFactory is Ownable{
     constructor() {
         
     }
 
     // ゾンビが配列に格納された際のイベントを定義する
-    // zombieIdはzombies配列のインデックス番号
     event NewZombie(uint zombieId, string name, uint dna);
 
     uint dnaDigits = 16;
     uint dnaModulus = 10 ** dnaDigits; // 10の16乗
+    uint cooldownTime = 1 days;
 
     // 複数のゾンビのプロパティをもつ構造体の定義
     struct Zombie {
         string name;
         uint dna;
+        uint32 level;
+        uint32 readyTime;
     }
 
     // ゾンビ構造体の配列を定義
@@ -33,9 +35,9 @@ contract ZombieFactory {
     mapping (address => uint) ownerZombieCount; // アドレスからゾンビ
 
     // ゾンビを配列に格納する関数
-    function _createZombie(string memory _name, uint _dna) private {
+    function _createZombie(string memory _name, uint _dna) internal {
         // array.push()は、zombies配列に要素を追加する
-        zombies.push( Zombie(_name, _dna) );
+        zombies.push( Zombie(_name, _dna, 1, uint32(block.timestamp + cooldownTime)) );
 
         // 配列のインデックスを作成する　**配列は0オリジンなので -1
         uint id = zombies.length - 1;
